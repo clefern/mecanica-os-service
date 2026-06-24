@@ -1,0 +1,38 @@
+# Infra local do os-service — para dev ativo (app roda na máquina com ./mvnw spring-boot:run)
+# Para o stack completo: ver mecanica-infra-ms/local/docker-compose.full.yml
+services:
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: mecanica-os-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres-os:
+    image: postgres:16-alpine
+    container_name: mecanica-os-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: os_service
+      POSTGRES_USER: mecanica
+      POSTGRES_PASSWORD: mecanica
+    volumes:
+      - mecanica-os-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mecanica -d os_service"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  mecanica-os-postgres-data:
