@@ -1,0 +1,1 @@
+-- Placeholder — migrations reais serão extraídas do monólito na Fase 1
