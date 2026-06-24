@@ -14,6 +14,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.fiap.mecanica.os.application.saga.OsSagaCoordinator.GerarOrcamentoCommandPublisher;
 
 @Slf4j
 @Service
@@ -23,6 +24,7 @@ public class OrdemServicoService {
   private final OrdemServicoRepositoryPort repository;
   private final OsSagaCoordinator sagaCoordinator;
   private final OsSagaCoordinator.ReservarPecasCommandPublisher commandPublisher;
+  private final GerarOrcamentoCommandPublisher billingCommandPublisher;
 
   @Transactional
   public OrdemServico abrir(UUID clienteId, UUID veiculoId) {
@@ -57,7 +59,9 @@ public class OrdemServicoService {
   public OrdemServico emitirOrcamento(UUID osId) {
     OrdemServico os = buscarOuErrar(osId);
     os.emitirOrcamento();
-    return repository.salvar(os);
+    repository.salvar(os);
+    sagaCoordinator.iniciarGeracaoOrcamento(os, billingCommandPublisher);
+    return os;
   }
 
   @Transactional

@@ -30,6 +30,12 @@ public class SagaStateEntity {
   @Column(name = "status", nullable = false)
   private String status;
 
+  @Column(name = "orcamento_id")
+  private UUID orcamentoId;
+
+  @Column(name = "payment_url", length = 500)
+  private String paymentUrl;
+
   @Column(name = "created_at", nullable = false, updatable = false)
   private LocalDateTime createdAt;
 

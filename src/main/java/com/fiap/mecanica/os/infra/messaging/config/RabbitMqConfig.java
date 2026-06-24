@@ -16,12 +16,26 @@ import org.springframework.context.annotation.Configuration;
 public class RabbitMqConfig {
 
   public static final String EXCHANGE = "mecanica.direct";
+
+  // M1 — inventory
   public static final String QUEUE_RESERVAR_PECAS = "mecanica.inventory.reservar-pecas";
   public static final String QUEUE_PECAS_RESERVADAS = "mecanica.os.pecas-reservadas";
   public static final String QUEUE_FALHA_RESERVA = "mecanica.os.falha-reserva";
   public static final String RK_RESERVAR_PECAS = "inventory.reservar-pecas";
   public static final String RK_PECAS_RESERVADAS = "os.pecas-reservadas";
   public static final String RK_FALHA_RESERVA = "os.falha-reserva";
+
+  // M2 — billing
+  public static final String QUEUE_GERAR_ORCAMENTO = "mecanica.billing.gerar-orcamento";
+  public static final String QUEUE_ORCAMENTO_CRIADO = "mecanica.os.orcamento-criado";
+  public static final String QUEUE_FALHA_BILLING = "mecanica.os.falha-no-billing";
+  public static final String QUEUE_PAGAMENTO_CONFIRMADO = "mecanica.os.pagamento-confirmado";
+  public static final String QUEUE_PAGAMENTO_RECUSADO = "mecanica.os.pagamento-recusado";
+  public static final String RK_GERAR_ORCAMENTO = "billing.gerar-orcamento";
+  public static final String RK_ORCAMENTO_CRIADO = "os.orcamento-criado";
+  public static final String RK_FALHA_BILLING = "os.falha-no-billing";
+  public static final String RK_PAGAMENTO_CONFIRMADO = "os.pagamento-confirmado";
+  public static final String RK_PAGAMENTO_RECUSADO = "os.pagamento-recusado";
 
   @Bean
   DirectExchange mecanicaExchange() {
@@ -56,6 +70,57 @@ public class RabbitMqConfig {
   @Bean
   Binding bindingFalhaReserva(Queue filaFalhaReserva, DirectExchange mecanicaExchange) {
     return BindingBuilder.bind(filaFalhaReserva).to(mecanicaExchange).with(RK_FALHA_RESERVA);
+  }
+
+  // M2 — billing queues (os-service é consumidor dessas 4 + publica em gerar-orcamento)
+  @Bean
+  Queue filaGerarOrcamento() {
+    return QueueBuilder.durable(QUEUE_GERAR_ORCAMENTO).build();
+  }
+
+  @Bean
+  Queue filaOrcamentoCriado() {
+    return QueueBuilder.durable(QUEUE_ORCAMENTO_CRIADO).build();
+  }
+
+  @Bean
+  Queue filaFalhaBilling() {
+    return QueueBuilder.durable(QUEUE_FALHA_BILLING).build();
+  }
+
+  @Bean
+  Queue filaPagamentoConfirmado() {
+    return QueueBuilder.durable(QUEUE_PAGAMENTO_CONFIRMADO).build();
+  }
+
+  @Bean
+  Queue filaPagamentoRecusado() {
+    return QueueBuilder.durable(QUEUE_PAGAMENTO_RECUSADO).build();
+  }
+
+  @Bean
+  Binding bindingGerarOrcamento(Queue filaGerarOrcamento, DirectExchange mecanicaExchange) {
+    return BindingBuilder.bind(filaGerarOrcamento).to(mecanicaExchange).with(RK_GERAR_ORCAMENTO);
+  }
+
+  @Bean
+  Binding bindingOrcamentoCriado(Queue filaOrcamentoCriado, DirectExchange mecanicaExchange) {
+    return BindingBuilder.bind(filaOrcamentoCriado).to(mecanicaExchange).with(RK_ORCAMENTO_CRIADO);
+  }
+
+  @Bean
+  Binding bindingFalhaBilling(Queue filaFalhaBilling, DirectExchange mecanicaExchange) {
+    return BindingBuilder.bind(filaFalhaBilling).to(mecanicaExchange).with(RK_FALHA_BILLING);
+  }
+
+  @Bean
+  Binding bindingPagamentoConfirmado(Queue filaPagamentoConfirmado, DirectExchange mecanicaExchange) {
+    return BindingBuilder.bind(filaPagamentoConfirmado).to(mecanicaExchange).with(RK_PAGAMENTO_CONFIRMADO);
+  }
+
+  @Bean
+  Binding bindingPagamentoRecusado(Queue filaPagamentoRecusado, DirectExchange mecanicaExchange) {
+    return BindingBuilder.bind(filaPagamentoRecusado).to(mecanicaExchange).with(RK_PAGAMENTO_RECUSADO);
   }
 
   @Bean
