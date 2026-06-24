@@ -33,3 +33,10 @@ springdoc:
     path: /v3/api-docs
   swagger-ui:
     path: /swagger-ui.html
+
+security:
+  jwt:
+    secret-key: ${SECURITY_JWT_SECRET_KEY:ZGV2U2VjcmV0S2V5Rm9yTG9jYWxEZXZlbG9wbWVudE9ubHkzMkJ5dGVz}
+
+seeding:
+  enabled: ${SEEDING_ENABLED:true}
