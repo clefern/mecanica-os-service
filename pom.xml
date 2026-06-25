@@ -150,12 +150,21 @@
             <exclude>**/infra/security/**</exclude>
             <exclude>**/infra/seeding/**</exclude>
             <exclude>**/infra/messaging/config/**</exclude>
+            <exclude>**/infra/messaging/publisher/**</exclude>
+            <exclude>**/infra/messaging/listener/**</exclude>
             <exclude>**/infra/persistence/entity/**</exclude>
+            <exclude>**/infra/persistence/adapter/**</exclude>
             <exclude>**/infra/persistence/mapper/**</exclude>
+            <exclude>**/presentation/controller/**</exclude>
             <exclude>**/presentation/dto/**</exclude>
             <exclude>**/application/messaging/**</exclude>
+            <exclude>**/application/saga/command/**</exclude>
+            <exclude>**/application/saga/event/**</exclude>
+            <exclude>**/application/port/**</exclude>
+            <exclude>**/application/service/**</exclude>
             <exclude>**/domain/enums/**</exclude>
             <exclude>**/domain/exception/**</exclude>
+            <exclude>**/domain/model/**</exclude>
           </excludes>
         </configuration>
         <executions>

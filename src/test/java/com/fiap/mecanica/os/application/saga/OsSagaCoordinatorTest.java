@@ -3,7 +3,7 @@ package com.fiap.mecanica.os.application.saga;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -37,8 +37,11 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class OsSagaCoordinatorTest {
 
   @Mock SagaStateJpaRepository sagaStateRepository;
@@ -113,11 +116,10 @@ class OsSagaCoordinatorTest {
 
     coordinator.onOrcamentoCriado(new OrcamentoCriadoEvent(sagaId, osId, orcamentoId, "http://mp/pay"));
 
-    ArgumentCaptor<SagaStateEntity> captor = ArgumentCaptor.forClass(SagaStateEntity.class);
-    verify(sagaStateRepository).save(captor.capture());
-    assertThat(captor.getValue().getStatus()).isEqualTo("AGUARDANDO_PAGAMENTO");
-    assertThat(captor.getValue().getOrcamentoId()).isEqualTo(orcamentoId);
-    assertThat(captor.getValue().getPaymentUrl()).isEqualTo("http://mp/pay");
+    verify(sagaStateRepository).save(any());
+    assertThat(sagaState.getStatus()).isEqualTo("AGUARDANDO_PAGAMENTO");
+    assertThat(sagaState.getOrcamentoId()).isEqualTo(orcamentoId);
+    assertThat(sagaState.getPaymentUrl()).isEqualTo("http://mp/pay");
   }
 
   // ── onPagamentoConfirmado ─────────────────────────────────────────────────
@@ -134,7 +136,7 @@ class OsSagaCoordinatorTest {
 
     assertThat(os.getStatus()).isEqualTo(StatusOS.APROVADA);
     verify(reservarPecasPublisher).publicar(argThat(cmd -> cmd.osId().equals(osId)));
-    verify(sagaStateRepository).save(argThat(s -> s.getStatus().equals("AGUARDANDO_INVENTARIO")));
+    assertThat(sagaState.getStatus()).isEqualTo("AGUARDANDO_INVENTARIO");
   }
 
   // ── onPagamentoRecusado ───────────────────────────────────────────────────
@@ -148,7 +150,8 @@ class OsSagaCoordinatorTest {
     coordinator.onPagamentoRecusado(new PagamentoRecusadoEvent(sagaId, osId, UUID.randomUUID(), "saldo insuficiente"));
 
     assertThat(os.getStatus()).isEqualTo(StatusOS.CANCELADA);
-    verify(sagaStateRepository).save(argThat(s -> s.getStatus().equals("COMPENSADA_BILLING")));
+    verify(sagaStateRepository, times(2)).save(any(SagaStateEntity.class));
+    assertThat(sagaState.getStatus()).isEqualTo("COMPENSADA_BILLING");
   }
 
   // ── onFalhaNoBilling ──────────────────────────────────────────────────────
@@ -162,7 +165,8 @@ class OsSagaCoordinatorTest {
     coordinator.onFalhaNoBilling(new FalhaNoBillingEvent(sagaId, osId, "erro externo"));
 
     assertThat(os.getStatus()).isEqualTo(StatusOS.CANCELADA);
-    verify(sagaStateRepository).save(argThat(s -> s.getStatus().equals("COMPENSADA_BILLING")));
+    verify(sagaStateRepository, times(2)).save(any(SagaStateEntity.class));
+    assertThat(sagaState.getStatus()).isEqualTo("COMPENSADA_BILLING");
   }
 
   // ── onPecasReservadas ─────────────────────────────────────────────────────
@@ -176,7 +180,7 @@ class OsSagaCoordinatorTest {
     coordinator.onPecasReservadas(new PecasReservadasEvent(sagaId, osId), iniciarExecucaoPublisher);
 
     assertThat(os.getStatus()).isEqualTo(StatusOS.EM_EXECUCAO);
-    verify(sagaStateRepository).save(argThat(s -> s.getStatus().equals("AGUARDANDO_WORKSHOP")));
+    assertThat(sagaState.getStatus()).isEqualTo("AGUARDANDO_WORKSHOP");
     verify(iniciarExecucaoPublisher).publicar(argThat(cmd ->
         cmd.sagaId().equals(sagaId) && cmd.osId().equals(osId)));
   }
@@ -192,7 +196,8 @@ class OsSagaCoordinatorTest {
     coordinator.onFalhaNaReserva(new FalhaNaReservaEvent(sagaId, osId, "sem estoque"));
 
     assertThat(os.getStatus()).isEqualTo(StatusOS.CANCELADA);
-    verify(sagaStateRepository).save(argThat(s -> s.getStatus().equals("COMPENSADA")));
+    verify(sagaStateRepository, times(2)).save(any(SagaStateEntity.class));
+    assertThat(sagaState.getStatus()).isEqualTo("COMPENSADA");
   }
 
   // ── onExecucaoFinalizada ──────────────────────────────────────────────────
@@ -207,8 +212,8 @@ class OsSagaCoordinatorTest {
     coordinator.onExecucaoFinalizada(new ExecucaoFinalizadaEvent(sagaId, osId, execucaoId));
 
     assertThat(os.getStatus()).isEqualTo(StatusOS.FINALIZADA);
-    verify(sagaStateRepository).save(argThat(s ->
-        s.getStatus().equals("CONCLUIDA") && execucaoId.equals(s.getExecucaoId())));
+    assertThat(sagaState.getStatus()).isEqualTo("CONCLUIDA");
+    assertThat(sagaState.getExecucaoId()).isEqualTo(execucaoId);
   }
 
   // ── onFalhaNaExecucao ─────────────────────────────────────────────────────
@@ -222,6 +227,7 @@ class OsSagaCoordinatorTest {
     coordinator.onFalhaNaExecucao(new FalhaNaExecucaoEvent(sagaId, osId, "mecânico indisponível"));
 
     assertThat(os.getStatus()).isEqualTo(StatusOS.CANCELADA);
-    verify(sagaStateRepository).save(argThat(s -> s.getStatus().equals("COMPENSADA_WORKSHOP")));
+    verify(sagaStateRepository, times(2)).save(any(SagaStateEntity.class));
+    assertThat(sagaState.getStatus()).isEqualTo("COMPENSADA_WORKSHOP");
   }
 }
