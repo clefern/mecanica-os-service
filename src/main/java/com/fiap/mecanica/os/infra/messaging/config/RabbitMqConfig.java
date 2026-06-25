@@ -26,7 +26,7 @@ public class RabbitMqConfig {
   public static final String RK_FALHA_RESERVA = "os.falha-reserva";
 
   // M2 — billing
-  public static final String QUEUE_GERAR_ORCAMENTO = "mecanica.billing.gerar-orcamento";
+  public static final String QUEUE_GERAR_ORCAMENTO      = "mecanica.billing.gerar-orcamento";
   public static final String QUEUE_ORCAMENTO_CRIADO = "mecanica.os.orcamento-criado";
   public static final String QUEUE_FALHA_BILLING = "mecanica.os.falha-no-billing";
   public static final String QUEUE_PAGAMENTO_CONFIRMADO = "mecanica.os.pagamento-confirmado";
@@ -121,6 +121,44 @@ public class RabbitMqConfig {
   @Bean
   Binding bindingPagamentoRecusado(Queue filaPagamentoRecusado, DirectExchange mecanicaExchange) {
     return BindingBuilder.bind(filaPagamentoRecusado).to(mecanicaExchange).with(RK_PAGAMENTO_RECUSADO);
+  }
+
+  // M3 — workshop
+  public static final String QUEUE_INICIAR_EXECUCAO    = "mecanica.workshop.iniciar-execucao";
+  public static final String QUEUE_EXECUCAO_FINALIZADA = "mecanica.os.execucao-finalizada";
+  public static final String QUEUE_FALHA_EXECUCAO      = "mecanica.os.falha-execucao";
+  public static final String RK_INICIAR_EXECUCAO       = "workshop.iniciar-execucao";
+  public static final String RK_EXECUCAO_FINALIZADA    = "os.execucao-finalizada";
+  public static final String RK_FALHA_EXECUCAO         = "os.falha-execucao";
+
+  @Bean
+  Queue filaIniciarExecucao() {
+    return QueueBuilder.durable(QUEUE_INICIAR_EXECUCAO).build();
+  }
+
+  @Bean
+  Queue filaExecucaoFinalizada() {
+    return QueueBuilder.durable(QUEUE_EXECUCAO_FINALIZADA).build();
+  }
+
+  @Bean
+  Queue filaFalhaExecucao() {
+    return QueueBuilder.durable(QUEUE_FALHA_EXECUCAO).build();
+  }
+
+  @Bean
+  Binding bindingIniciarExecucao(Queue filaIniciarExecucao, DirectExchange mecanicaExchange) {
+    return BindingBuilder.bind(filaIniciarExecucao).to(mecanicaExchange).with(RK_INICIAR_EXECUCAO);
+  }
+
+  @Bean
+  Binding bindingExecucaoFinalizada(Queue filaExecucaoFinalizada, DirectExchange mecanicaExchange) {
+    return BindingBuilder.bind(filaExecucaoFinalizada).to(mecanicaExchange).with(RK_EXECUCAO_FINALIZADA);
+  }
+
+  @Bean
+  Binding bindingFalhaExecucao(Queue filaFalhaExecucao, DirectExchange mecanicaExchange) {
+    return BindingBuilder.bind(filaFalhaExecucao).to(mecanicaExchange).with(RK_FALHA_EXECUCAO);
   }
 
   @Bean

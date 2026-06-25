@@ -36,6 +36,9 @@ public class SagaStateEntity {
   @Column(name = "payment_url", length = 500)
   private String paymentUrl;
 
+  @Column(name = "execucao_id")
+  private UUID execucaoId;
+
   @Column(name = "created_at", nullable = false, updatable = false)
   private LocalDateTime createdAt;
 

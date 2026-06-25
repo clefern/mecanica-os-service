@@ -1,6 +1,8 @@
 package com.fiap.mecanica.os.infra.messaging.listener;
 
 import com.fiap.mecanica.os.application.saga.OsSagaCoordinator;
+import com.fiap.mecanica.os.application.saga.event.ExecucaoFinalizadaEvent;
+import com.fiap.mecanica.os.application.saga.event.FalhaNaExecucaoEvent;
 import com.fiap.mecanica.os.application.saga.event.FalhaNoBillingEvent;
 import com.fiap.mecanica.os.application.saga.event.FalhaNaReservaEvent;
 import com.fiap.mecanica.os.application.saga.event.OrcamentoCriadoEvent;
@@ -9,6 +11,7 @@ import com.fiap.mecanica.os.application.saga.event.PagamentoRecusadoEvent;
 import com.fiap.mecanica.os.application.saga.event.PecasReservadasEvent;
 import com.fiap.mecanica.os.infra.messaging.config.RabbitMqConfig;
 import com.fiap.mecanica.os.infra.messaging.publisher.SagaCommandPublisher;
+import com.fiap.mecanica.os.infra.messaging.publisher.WorkshopCommandPublisher;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -21,12 +24,13 @@ public class SagaResponseListener {
 
   private final OsSagaCoordinator sagaCoordinator;
   private final SagaCommandPublisher sagaCommandPublisher;
+  private final WorkshopCommandPublisher workshopCommandPublisher;
 
   // M1 — inventory responses
   @RabbitListener(queues = RabbitMqConfig.QUEUE_PECAS_RESERVADAS)
   public void onPecasReservadas(PecasReservadasEvent event) {
     log.info("[MQ] Recebido PecasReservadasEvent sagaId={}", event.sagaId());
-    sagaCoordinator.onPecasReservadas(event);
+    sagaCoordinator.onPecasReservadas(event, workshopCommandPublisher);
   }
 
   @RabbitListener(queues = RabbitMqConfig.QUEUE_FALHA_RESERVA)
@@ -58,5 +62,18 @@ public class SagaResponseListener {
   public void onPagamentoRecusado(PagamentoRecusadoEvent event) {
     log.warn("[MQ] Recebido PagamentoRecusadoEvent sagaId={} motivo={}", event.sagaId(), event.motivo());
     sagaCoordinator.onPagamentoRecusado(event);
+  }
+
+  // M3 — workshop responses
+  @RabbitListener(queues = RabbitMqConfig.QUEUE_EXECUCAO_FINALIZADA)
+  public void onExecucaoFinalizada(ExecucaoFinalizadaEvent event) {
+    log.info("[MQ] Recebido ExecucaoFinalizadaEvent sagaId={} execucaoId={}", event.sagaId(), event.execucaoId());
+    sagaCoordinator.onExecucaoFinalizada(event);
+  }
+
+  @RabbitListener(queues = RabbitMqConfig.QUEUE_FALHA_EXECUCAO)
+  public void onFalhaNaExecucao(FalhaNaExecucaoEvent event) {
+    log.warn("[MQ] Recebido FalhaNaExecucaoEvent sagaId={} motivo={}", event.sagaId(), event.motivo());
+    sagaCoordinator.onFalhaNaExecucao(event);
   }
 }
