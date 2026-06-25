@@ -2,7 +2,10 @@ package com.fiap.mecanica.os.application.saga;
 
 import com.fiap.mecanica.os.application.port.out.OrdemServicoRepositoryPort;
 import com.fiap.mecanica.os.application.saga.command.GerarOrcamentoCommand;
+import com.fiap.mecanica.os.application.saga.command.IniciarExecucaoCommand;
 import com.fiap.mecanica.os.application.saga.command.ReservarPecasCommand;
+import com.fiap.mecanica.os.application.saga.event.ExecucaoFinalizadaEvent;
+import com.fiap.mecanica.os.application.saga.event.FalhaNaExecucaoEvent;
 import com.fiap.mecanica.os.application.saga.event.FalhaNoBillingEvent;
 import com.fiap.mecanica.os.application.saga.event.FalhaNaReservaEvent;
 import com.fiap.mecanica.os.application.saga.event.OrcamentoCriadoEvent;
@@ -140,14 +143,23 @@ public class OsSagaCoordinator {
     });
   }
 
-  // ── Respostas do inventory (M1 reaproveitado) ─────────────────────────────
+  // ── Respostas do inventory ────────────────────────────────────────────────
 
   @Transactional
-  public void onPecasReservadas(PecasReservadasEvent event) {
-    log.info("[SAGA] PecasReservadas sagaId={}", event.sagaId());
+  public void onPecasReservadas(PecasReservadasEvent event,
+      IniciarExecucaoCommandPublisher publisher) {
+    log.info("[SAGA] PecasReservadas — iniciando execução sagaId={}", event.sagaId());
+
     sagaStateRepository.findById(event.sagaId()).ifPresent(state -> {
-      state.setStatus("CONCLUIDA");
+      state.setStatus("AGUARDANDO_WORKSHOP");
       sagaStateRepository.save(state);
+    });
+
+    osRepository.buscarPorId(event.osId()).ifPresent(os -> {
+      os.iniciarExecucao();
+      osRepository.salvar(os);
+      publisher.publicar(new IniciarExecucaoCommand(event.sagaId(), os.getId()));
+      log.info("[SAGA] IniciarExecucao publicado sagaId={}", event.sagaId());
     });
   }
 
@@ -168,6 +180,41 @@ public class OsSagaCoordinator {
     });
   }
 
+  // ── M3: respostas do workshop ─────────────────────────────────────────────
+
+  @Transactional
+  public void onExecucaoFinalizada(ExecucaoFinalizadaEvent event) {
+    log.info("[SAGA] ExecucaoFinalizada sagaId={} execucaoId={}", event.sagaId(), event.execucaoId());
+
+    osRepository.buscarPorId(event.osId()).ifPresent(os -> {
+      os.finalizar();
+      osRepository.salvar(os);
+    });
+
+    sagaStateRepository.findById(event.sagaId()).ifPresent(state -> {
+      state.setStatus("CONCLUIDA");
+      state.setExecucaoId(event.execucaoId());
+      sagaStateRepository.save(state);
+    });
+  }
+
+  @Transactional
+  public void onFalhaNaExecucao(FalhaNaExecucaoEvent event) {
+    log.warn("[SAGA] FalhaNaExecucao sagaId={} motivo={}", event.sagaId(), event.motivo());
+    sagaStateRepository.findById(event.sagaId()).ifPresent(state -> {
+      state.setStatus("COMPENSANDO");
+      sagaStateRepository.save(state);
+    });
+    osRepository.buscarPorId(event.osId()).ifPresent(os -> {
+      os.cancelar();
+      osRepository.salvar(os);
+    });
+    sagaStateRepository.findById(event.sagaId()).ifPresent(state -> {
+      state.setStatus("COMPENSADA_WORKSHOP");
+      sagaStateRepository.save(state);
+    });
+  }
+
   // ── Publisher interfaces ──────────────────────────────────────────────────
 
   public interface ReservarPecasCommandPublisher {
@@ -176,5 +223,9 @@ public class OsSagaCoordinator {
 
   public interface GerarOrcamentoCommandPublisher {
     void publicar(GerarOrcamentoCommand command);
+  }
+
+  public interface IniciarExecucaoCommandPublisher {
+    void publicar(IniciarExecucaoCommand command);
   }
 }
