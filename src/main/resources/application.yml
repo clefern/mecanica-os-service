@@ -37,6 +37,7 @@ springdoc:
 security:
   jwt:
     secret-key: ${SECURITY_JWT_SECRET_KEY:ZGV2U2VjcmV0S2V5Rm9yTG9jYWxEZXZlbG9wbWVudE9ubHkzMkJ5dGVz}
+    expiration-time: ${JWT_EXPIRATION_TIME:86400000}
 
 seeding:
   enabled: ${SEEDING_ENABLED:true}
