@@ -41,10 +41,11 @@ public class OrdemServico {
   @Builder.Default
   private List<ItemOrdemServico> itens = new ArrayList<>();
 
-  public static OrdemServico nova(UUID clienteId, UUID veiculoId) {
+  public static OrdemServico nova(UUID clienteId, UUID veiculoId, UUID mecanicoId) {
     return OrdemServico.builder()
         .clienteId(clienteId)
         .veiculoId(veiculoId)
+        .mecanicoExecucaoId(mecanicoId)
         .codigo(gerarCodigo())
         .status(StatusOS.RECEBIDA)
         .dataEntrada(LocalDateTime.now())

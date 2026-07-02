@@ -5,4 +5,5 @@ import java.util.UUID;
 
 public record AbrirOsRequest(
     @NotNull UUID clienteId,
-    @NotNull UUID veiculoId) {}
+    @NotNull UUID veiculoId,
+    @NotNull UUID mecanicoId) {}
