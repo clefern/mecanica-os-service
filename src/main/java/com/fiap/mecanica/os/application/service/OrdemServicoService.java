@@ -27,8 +27,8 @@ public class OrdemServicoService {
   private final GerarOrcamentoCommandPublisher billingCommandPublisher;
 
   @Transactional
-  public OrdemServico abrir(UUID clienteId, UUID veiculoId) {
-    OrdemServico os = OrdemServico.nova(clienteId, veiculoId);
+  public OrdemServico abrir(UUID clienteId, UUID veiculoId, UUID mecanicoId) {
+    OrdemServico os = OrdemServico.nova(clienteId, veiculoId, mecanicoId);
     return repository.salvar(os);
   }
 

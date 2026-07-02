@@ -30,7 +30,7 @@ public class OrdemServicoController {
 
   @PostMapping
   public ResponseEntity<OrdemServicoResponse> abrir(@Valid @RequestBody AbrirOsRequest req) {
-    OrdemServico os = service.abrir(req.clienteId(), req.veiculoId());
+    OrdemServico os = service.abrir(req.clienteId(), req.veiculoId(), req.mecanicoId());
     return ResponseEntity
         .created(URI.create("/api/ordens-servico/" + os.getId()))
         .body(OrdemServicoResponse.from(os));
