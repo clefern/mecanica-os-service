@@ -211,7 +211,7 @@ class OsSagaCoordinatorTest {
 
     coordinator.onExecucaoFinalizada(new ExecucaoFinalizadaEvent(sagaId, osId, execucaoId));
 
-    assertThat(os.getStatus()).isEqualTo(StatusOS.FINALIZADA);
+    assertThat(os.getStatus()).isEqualTo(StatusOS.ENTREGUE);
     assertThat(sagaState.getStatus()).isEqualTo("CONCLUIDA");
     assertThat(sagaState.getExecucaoId()).isEqualTo(execucaoId);
   }
