@@ -15,10 +15,11 @@ class OrdemServicoTest {
 
   private static final UUID CLIENTE_ID = UUID.randomUUID();
   private static final UUID VEICULO_ID = UUID.randomUUID();
+  private static final UUID MECANICO_ID = UUID.randomUUID();
 
   @Test
   void nova_deveIniciarComStatusRecebidaECodigoGerado() {
-    OrdemServico os = OrdemServico.nova(CLIENTE_ID, VEICULO_ID);
+    OrdemServico os = OrdemServico.nova(CLIENTE_ID, VEICULO_ID, MECANICO_ID);
 
     assertThat(os.getStatus()).isEqualTo(StatusOS.RECEBIDA);
     assertThat(os.getCodigo()).startsWith("OS-");
@@ -29,7 +30,7 @@ class OrdemServicoTest {
 
   @Test
   void transicaoValida_recebida_paraEmDiagnostico() {
-    OrdemServico os = OrdemServico.nova(CLIENTE_ID, VEICULO_ID);
+    OrdemServico os = OrdemServico.nova(CLIENTE_ID, VEICULO_ID, MECANICO_ID);
     os.iniciarDiagnostico();
     assertThat(os.getStatus()).isEqualTo(StatusOS.EM_DIAGNOSTICO);
   }
@@ -74,7 +75,7 @@ class OrdemServicoTest {
 
   @Test
   void cancelar_podeSerChamadoDeQualquerStatusAtivo() {
-    OrdemServico os = OrdemServico.nova(CLIENTE_ID, VEICULO_ID);
+    OrdemServico os = OrdemServico.nova(CLIENTE_ID, VEICULO_ID, MECANICO_ID);
     os.cancelar();
     assertThat(os.getStatus()).isEqualTo(StatusOS.CANCELADA);
     assertThat(os.getDataFechamento()).isNotNull();
@@ -82,7 +83,7 @@ class OrdemServicoTest {
 
   @Test
   void transicaoInvalida_deveLancarException() {
-    OrdemServico os = OrdemServico.nova(CLIENTE_ID, VEICULO_ID);
+    OrdemServico os = OrdemServico.nova(CLIENTE_ID, VEICULO_ID, MECANICO_ID);
     assertThatThrownBy(os::aprovar)
         .isInstanceOf(TransicaoStatusInvalidaException.class);
   }
@@ -119,7 +120,7 @@ class OrdemServicoTest {
 
   @Test
   void adicionarItem_duplicado_deveProibir() {
-    OrdemServico os = OrdemServico.nova(CLIENTE_ID, VEICULO_ID);
+    OrdemServico os = OrdemServico.nova(CLIENTE_ID, VEICULO_ID, MECANICO_ID);
     UUID refId = UUID.randomUUID();
     ItemOrdemServico item = buildItem(refId, TipoItem.PECA, new BigDecimal("100.00"), 1);
     os.adicionarItem(item);
@@ -137,7 +138,7 @@ class OrdemServicoTest {
 
   @Test
   void adicionarItem_deveRecalcularValorTotal() {
-    OrdemServico os = OrdemServico.nova(CLIENTE_ID, VEICULO_ID);
+    OrdemServico os = OrdemServico.nova(CLIENTE_ID, VEICULO_ID, MECANICO_ID);
     os.adicionarItem(buildItem(UUID.randomUUID(), TipoItem.PECA, new BigDecimal("100.00"), 2));
     os.adicionarItem(buildItem(UUID.randomUUID(), TipoItem.SERVICO, new BigDecimal("50.00"), 1));
     assertThat(os.getValorTotal()).isEqualByComparingTo(new BigDecimal("250.00"));
@@ -145,7 +146,7 @@ class OrdemServicoTest {
 
   @Test
   void itensDoPTipo_deveFiltraTipoCorretamente() {
-    OrdemServico os = OrdemServico.nova(CLIENTE_ID, VEICULO_ID);
+    OrdemServico os = OrdemServico.nova(CLIENTE_ID, VEICULO_ID, MECANICO_ID);
     os.adicionarItem(buildItem(UUID.randomUUID(), TipoItem.PECA, new BigDecimal("10.00"), 1));
     os.adicionarItem(buildItem(UUID.randomUUID(), TipoItem.SERVICO, new BigDecimal("20.00"), 1));
     os.adicionarItem(buildItem(UUID.randomUUID(), TipoItem.INSUMO, new BigDecimal("5.00"), 1));
