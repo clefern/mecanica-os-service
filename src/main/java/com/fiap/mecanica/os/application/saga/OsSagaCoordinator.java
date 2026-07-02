@@ -188,6 +188,7 @@ public class OsSagaCoordinator {
 
     osRepository.buscarPorId(event.osId()).ifPresent(os -> {
       os.finalizar();
+      os.entregar();
       osRepository.salvar(os);
     });
 
