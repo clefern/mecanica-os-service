@@ -1,0 +1,22 @@
+spring:
+  rabbitmq:
+    host: localhost
+    port: 62999
+    listener:
+      simple:
+        auto-startup: false
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+security:
+  jwt:
+    secret-key: ZGV2U2VjcmV0S2V5Rm9yTG9jYWxEZXZlbG9wbWVudE9ubHkzMkJ5dGVz
+    expiration-time: 86400000
+
+seeding:
+  enabled: true
