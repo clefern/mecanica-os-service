@@ -11,6 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # histórico completo p/ análise de PR do SonarCloud (ref main)
 
       - uses: actions/setup-java@v4
         with:
@@ -25,6 +27,12 @@ jobs:
         run: mvn --batch-mode verify
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Análise SonarCloud
+        run: mvn --batch-mode sonar:sonar
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
       - name: Relatório JaCoCo
         if: always()
