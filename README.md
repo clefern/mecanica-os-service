@@ -1,5 +1,8 @@
 # mecanica-os-service
 
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=mecanica_os-service&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=mecanica_os-service)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=mecanica_os-service&metric=coverage)](https://sonarcloud.io/summary/new_code?id=mecanica_os-service)
+
 > Orquestrador da Saga e gerenciador do ciclo de vida da Ordem de Serviço — coração da Fase 4 (Grupo 14SOAT).
 
 ## Responsabilidade na Saga
