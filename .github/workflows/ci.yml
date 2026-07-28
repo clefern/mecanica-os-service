@@ -2,34 +2,14 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, develop]
   pull_request:
-    branches: [main]
+    branches: [main, develop]
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-java@v4
-        with:
-          java-version: '21'
-          distribution: temurin
-          cache: maven
-          server-id: github
-          server-username: GITHUB_ACTOR
-          server-password: GITHUB_TOKEN
-
-      - name: Build e testes
-        run: mvn --batch-mode verify
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Relatório JaCoCo
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: jacoco-report-os-service
-          path: target/site/jacoco/
-          retention-days: 7
+  test:
+    uses: clefern/fiap-tc-mecanica-pipelines/.github/workflows/test.yml@main
+    with:
+      service-name: os-service
+    secrets:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

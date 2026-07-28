@@ -1,0 +1,110 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: os-service
+  labels:
+    app: os-service
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: os-service
+  template:
+    metadata:
+      labels:
+        app: os-service
+    spec:
+      initContainers:
+        - name: wait-for-otel
+          image: busybox:1.36
+          command: [ "sh", "-c", "until nc -z otel-collector 4318; do echo waiting for otel-collector; sleep 2; done;" ]
+      containers:
+        - name: os-service
+          image: placeholder:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+              name: http
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
+              memory: "1Gi"
+              cpu: "500m"
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8080
+            initialDelaySeconds: 60
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8080
+            initialDelaySeconds: 90
+            periodSeconds: 15
+          startupProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 30
+          env:
+            - name: "_JAVA_OPTIONS"
+              value: >
+                -XX:+UseContainerSupport
+                -XX:MaxRAMPercentage=75.0
+                -XX:+UseG1GC
+                -Xms256m
+                -Xmx512m
+            - name: "OTEL_EXPORTER_OTLP_ENDPOINT"
+              value: "http://otel-collector:4318"
+            - name: "OTEL_EXPORTER_OTLP_TRACES_ENDPOINT"
+              value: "http://otel-collector:4318/v1/traces"
+            - name: "OTEL_EXPORTER_OTLP_METRICS_ENDPOINT"
+              value: "http://otel-collector:4318/v1/metrics"
+            - name: SERVER_PORT
+              value: "8080"
+            - name: DB_URL
+              valueFrom:
+                secretKeyRef:
+                  name: os-service-secret
+                  key: db-url
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: ms-shared-secret
+                  key: db-user
+            - name: DB_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: ms-shared-secret
+                  key: db-pass
+            - name: RABBITMQ_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: ms-shared-secret
+                  key: rabbitmq-host
+            - name: RABBITMQ_USER
+              valueFrom:
+                secretKeyRef:
+                  name: ms-shared-secret
+                  key: rabbitmq-user
+            - name: RABBITMQ_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: ms-shared-secret
+                  key: rabbitmq-pass
+            - name: SECURITY_JWT_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: ms-shared-secret
+                  key: jwt-secret

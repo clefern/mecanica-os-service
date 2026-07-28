@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: os-service
+  labels:
+    app: os-service
+spec:
+  type: ClusterIP
+  selector:
+    app: os-service
+  ports:
+    - port: 80
+      targetPort: 8080
+      protocol: TCP
+      name: http

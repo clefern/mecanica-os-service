@@ -1,5 +1,8 @@
 # mecanica-os-service
 
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=mecanica_os-service&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=mecanica_os-service)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=mecanica_os-service&metric=coverage)](https://sonarcloud.io/summary/new_code?id=mecanica_os-service)
+
 > Orquestrador da Saga e gerenciador do ciclo de vida da Ordem de Serviço — coração da Fase 4 (Grupo 14SOAT).
 
 ## Responsabilidade na Saga
@@ -27,6 +30,10 @@ RECEBIDA → EM_DIAGNOSTICO → AGUARDANDO_APROVACAO
 | `PUT` | `/api/ordens-servico/{id}/cancelar` | Cancelar OS |
 
 Swagger: `http://localhost:8080/swagger-ui.html`
+
+Collection Insomnia com o fluxo E2E completo dos 4 microsserviços:
+[`Insomnia_export.yaml`](https://github.com/clefern/mecanica-infra-ms/blob/main/mecanica-fiap/Insomnia_export.yaml)
+(repo `mecanica-infra-ms`).
 
 ## Mensagens RabbitMQ
 
