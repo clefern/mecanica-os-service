@@ -31,6 +31,10 @@ RECEBIDA → EM_DIAGNOSTICO → AGUARDANDO_APROVACAO
 
 Swagger: `http://localhost:8080/swagger-ui.html`
 
+Collection Insomnia com o fluxo E2E completo dos 4 microsserviços:
+[`Insomnia_export.yaml`](https://github.com/clefern/mecanica-infra-ms/blob/main/mecanica-fiap/Insomnia_export.yaml)
+(repo `mecanica-infra-ms`).
+
 ## Mensagens RabbitMQ
 
 ### Publica (comandos para os MS)
