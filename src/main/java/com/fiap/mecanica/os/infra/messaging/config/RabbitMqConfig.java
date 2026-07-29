@@ -161,6 +161,32 @@ public class RabbitMqConfig {
     return BindingBuilder.bind(filaFalhaExecucao).to(mecanicaExchange).with(RK_FALHA_EXECUCAO);
   }
 
+  // Notification — filas paralelas à saga, não afetam o fluxo principal
+  public static final String QUEUE_NOTIFICATION_OS_CRIADA = "mecanica.notification.os-criada";
+  public static final String QUEUE_NOTIFICATION_OS_FINALIZADA = "mecanica.notification.os-finalizada";
+  public static final String RK_NOTIFICATION_OS_CRIADA = "notification.os-criada";
+  public static final String RK_NOTIFICATION_OS_FINALIZADA = "notification.os-finalizada";
+
+  @Bean
+  Queue filaNotificationOsCriada() {
+    return QueueBuilder.durable(QUEUE_NOTIFICATION_OS_CRIADA).build();
+  }
+
+  @Bean
+  Queue filaNotificationOsFinalizada() {
+    return QueueBuilder.durable(QUEUE_NOTIFICATION_OS_FINALIZADA).build();
+  }
+
+  @Bean
+  Binding bindingNotificationOsCriada(Queue filaNotificationOsCriada, DirectExchange mecanicaExchange) {
+    return BindingBuilder.bind(filaNotificationOsCriada).to(mecanicaExchange).with(RK_NOTIFICATION_OS_CRIADA);
+  }
+
+  @Bean
+  Binding bindingNotificationOsFinalizada(Queue filaNotificationOsFinalizada, DirectExchange mecanicaExchange) {
+    return BindingBuilder.bind(filaNotificationOsFinalizada).to(mecanicaExchange).with(RK_NOTIFICATION_OS_FINALIZADA);
+  }
+
   @Bean
   Jackson2JsonMessageConverter messageConverter(ObjectMapper objectMapper) {
     return new Jackson2JsonMessageConverter(objectMapper);

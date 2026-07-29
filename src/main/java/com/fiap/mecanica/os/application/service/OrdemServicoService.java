@@ -1,5 +1,6 @@
 package com.fiap.mecanica.os.application.service;
 
+import com.fiap.mecanica.os.application.event.OsAbertaDomainEvent;
 import com.fiap.mecanica.os.application.port.out.OrdemServicoRepositoryPort;
 import com.fiap.mecanica.os.application.saga.OsSagaCoordinator;
 import com.fiap.mecanica.os.domain.enums.TipoItem;
@@ -10,6 +11,7 @@ import java.math.BigDecimal;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -25,11 +27,14 @@ public class OrdemServicoService {
   private final OsSagaCoordinator sagaCoordinator;
   private final OsSagaCoordinator.ReservarPecasCommandPublisher commandPublisher;
   private final GerarOrcamentoCommandPublisher billingCommandPublisher;
+  private final ApplicationEventPublisher applicationEventPublisher;
 
   @Transactional
   public OrdemServico abrir(UUID clienteId, UUID veiculoId, UUID mecanicoId) {
     OrdemServico os = OrdemServico.nova(clienteId, veiculoId, mecanicoId);
-    return repository.salvar(os);
+    OrdemServico salva = repository.salvar(os);
+    applicationEventPublisher.publishEvent(new OsAbertaDomainEvent(salva.getId()));
+    return salva;
   }
 
   @Transactional
