@@ -1,5 +1,7 @@
 package com.fiap.mecanica.os.infra.messaging.listener;
 
+import com.fiap.mecanica.os.application.messaging.OsFinalizadaNotificacaoEvent;
+import com.fiap.mecanica.os.application.port.out.OrdemServicoRepositoryPort;
 import com.fiap.mecanica.os.application.saga.OsSagaCoordinator;
 import com.fiap.mecanica.os.application.saga.event.ExecucaoFinalizadaEvent;
 import com.fiap.mecanica.os.application.saga.event.FalhaNaExecucaoEvent;
@@ -9,9 +11,13 @@ import com.fiap.mecanica.os.application.saga.event.OrcamentoCriadoEvent;
 import com.fiap.mecanica.os.application.saga.event.PagamentoConfirmadoEvent;
 import com.fiap.mecanica.os.application.saga.event.PagamentoRecusadoEvent;
 import com.fiap.mecanica.os.application.saga.event.PecasReservadasEvent;
+import com.fiap.mecanica.os.domain.model.OrdemServico;
 import com.fiap.mecanica.os.infra.messaging.config.RabbitMqConfig;
+import com.fiap.mecanica.os.infra.messaging.publisher.OsNotificationEventPublisher;
 import com.fiap.mecanica.os.infra.messaging.publisher.SagaCommandPublisher;
 import com.fiap.mecanica.os.infra.messaging.publisher.WorkshopCommandPublisher;
+import com.fiap.mecanica.os.infra.notification.OsNotificationSnapshotAssembler;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -25,6 +31,9 @@ public class SagaResponseListener {
   private final OsSagaCoordinator sagaCoordinator;
   private final SagaCommandPublisher sagaCommandPublisher;
   private final WorkshopCommandPublisher workshopCommandPublisher;
+  private final OrdemServicoRepositoryPort ordemServicoRepository;
+  private final OsNotificationSnapshotAssembler snapshotAssembler;
+  private final OsNotificationEventPublisher notificationEventPublisher;
 
   // M1 — inventory responses
   @RabbitListener(queues = RabbitMqConfig.QUEUE_PECAS_RESERVADAS)
@@ -69,6 +78,29 @@ public class SagaResponseListener {
   public void onExecucaoFinalizada(ExecucaoFinalizadaEvent event) {
     log.info("[MQ] Recebido ExecucaoFinalizadaEvent sagaId={} execucaoId={}", event.sagaId(), event.execucaoId());
     sagaCoordinator.onExecucaoFinalizada(event);
+    publicarNotificacaoFinalizacao(event.osId());
+  }
+
+  private void publicarNotificacaoFinalizacao(UUID osId) {
+    ordemServicoRepository.buscarPorId(osId).ifPresentOrElse(this::publicarNotificacao,
+        () -> log.error("[NOTIFICATION] OS não encontrada após finalização osId={}", osId));
+  }
+
+  private void publicarNotificacao(OrdemServico os) {
+    OsNotificationSnapshotAssembler.Snapshot snapshot = snapshotAssembler.montar(os);
+    notificationEventPublisher.publicar(
+        new OsFinalizadaNotificacaoEvent(
+            os.getId(),
+            os.getCodigo(),
+            os.getDataEntrada(),
+            os.getClienteId(),
+            snapshot.clienteNome(),
+            snapshot.clienteEmail(),
+            os.getVeiculoId(),
+            snapshot.veiculoPlaca(),
+            snapshot.veiculoMarca(),
+            snapshot.veiculoModelo(),
+            snapshot.veiculoAno()));
   }
 
   @RabbitListener(queues = RabbitMqConfig.QUEUE_FALHA_EXECUCAO)
